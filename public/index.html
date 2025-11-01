@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>French Intermediate Vocabulary Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* Slate 100 */
+        }
+        .container-card {
+            background-color: #ffffff;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-option {
+            transition: all 0.15s ease-in-out;
+            transform-origin: center;
+        }
+        .btn-option:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        /* Custom button colors */
+        .bg-primary { background-color: #4f46e5; } /* Indigo 600 */
+        .hover-primary:hover { background-color: #4338ca; } /* Indigo 700 */
+        .text-correct { color: #10b981; } /* Emerald 500 */
+        .text-incorrect { color: #ef4444; } /* Red 500 */
+        .bg-score-correct { background-color: #d1fae5; } /* Emerald 100 */
+        .bg-score-incorrect { background-color: #fee2e2; } /* Red 100 */
+        
+        /* UPDATED: Drastic selection style */
+        .bg-selected { 
+            background-color: #c7d2fe; /* Indigo 200, brighter/lighter color */
+            color: #3730a3; /* Indigo 800 for contrast */
+            border: 4px solid #4f46e5; /* Thick indigo border */
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.7); /* Glow effect */
+        }
+
+        /* Custom spinner style */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8 flex items-start justify-center">
+
+    <div id="app-container" class="container-card w-full max-w-4xl p-6 sm:p-10 rounded-xl">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-center mb-6 text-gray-800">
+            French Intermediate Vocabulary Challenge
+        </h1>
+
+        <!-- Score & Status -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0">
+            <div id="score-display" class="w-full sm:w-auto flex justify-center sm:justify-start space-x-4 text-xl font-bold">
+                <span class="p-3 rounded-xl bg-score-correct shadow-md text-correct">
+                    Correct: <span id="correct-count">0</span>
+                </span>
+                <span class="p-3 rounded-xl bg-score-incorrect shadow-md text-incorrect">
+                    Incorrect: <span id="incorrect-count">0</span>
+                </span>
+            </div>
+            <div id="user-id-display" class="text-sm text-gray-500 truncate w-full sm:w-auto text-center sm:text-right">
+                User ID: <span id="user-id-value" class="font-mono">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Word and Example Area (Context First) -->
+        <div id="question-area" class="text-center p-6 sm:p-10 bg-gray-50 rounded-xl mb-8 border-2 border-indigo-100 shadow-inner">
+            <div id="loader" class="flex justify-center items-center h-48" style="display: none;">
+                <div class="spinner"></div>
+                <p class="ml-4 text-xl text-indigo-600 font-semibold">Generating Intermediate Vocabulary...</p>
+            </div>
+            <div id="quiz-content" style="display: none;">
+                
+                <!-- French Sentence (Context First) -->
+                <p class="text-2xl text-gray-600 mb-4 font-semibold">Find the meaning of the word in this sentence:</p>
+                <div class="text-left p-4 sm:p-6 rounded-lg bg-indigo-50 border-l-4 border-indigo-500 mb-6">
+                    <p id="french-example" class="text-xl sm:text-2xl text-indigo-900 font-bold leading-relaxed">
+                        Ceci est un exemple de phrase en français.
+                    </p>
+                </div>
+
+                <!-- The French Word Itself (Emphasis on the word to translate) -->
+                <p class="text-2xl text-gray-600 mb-2 font-semibold">What is the English translation of:</p>
+                <div class="flex items-center justify-center space-x-4 mb-6">
+                    <p id="french-word" class="text-5xl sm:text-7xl font-black text-indigo-700 uppercase tracking-wider">
+                        MOT
+                    </p>
+                    <!-- Listen Button -->
+                    <button id="listen-button" class="p-3 rounded-full bg-indigo-500 text-white shadow-lg hover:bg-indigo-600 transition duration-150" aria-label="Listen to French word">
+                        <svg id="listen-icon" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4V1l5 4h5a2 2 0 012 2zM9.014 9.014a1.5 1.5 0 10-2.128 2.128l3 3a1.5 1.5 0 002.128-2.128l-3-3z" clip-rule="evenodd"/>
+                        </svg>
+                        <svg id="loading-spinner" class="animate-spin w-8 h-8 text-white" style="display:none;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Options -->
+        <div id="options-area" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <!-- Option buttons will be injected here -->
+        </div>
+
+        <!-- Submit/Continue Button -->
+        <div class="text-center">
+            <button id="action-button" class="w-full sm:w-1/2 p-4 rounded-xl text-2xl font-bold text-white bg-primary hover-primary shadow-lg" disabled>
+                Submit Answer
+            </button>
+        </div>
+
+        <!-- Feedback and Explanation Area (Hidden initially) -->
+        <div id="feedback-area" class="mt-8 p-6 sm:p-8 rounded-xl border-4" style="display: none;">
+            <p id="feedback-result" class="text-3xl font-extrabold mb-4 text-center"></p>
+            <div class="text-lg text-gray-700">
+                <!-- Explanation content will be rendered here with structured sections -->
+                <p id="explanation-text"></p>
+            </div>
+        </div>
+    </div>
+      
+    <!-- Firebase SDK Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1BUle9PjisG3ff7rqchBnO6HmCEUZ_Ww",
+            authDomain: "french-vocab-game.firebaseapp.com",
+            projectId: "french-vocab-game",
+            storageBucket: "french-vocab-game.appspot.com",
+            messagingSenderId: "950338044495",
+            appId: "1:950338044495:web:3e5d184f0edc254872603a",
+            measurementId: "G-6ZN9NC4PXK"
+            };
+        const isFirebaseConfigPresent = true;
+        // const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const apiKey = "AIzaSyAGz4qACN2g43o9cLUczi9APoRCAegUtbM";
+
+        const appId = firebaseConfig.projectId; 
+        const initialAuthToken = null;        
+        let db = null;
+        let auth = null;
+        let userId = null;
+        let isAuthReady = false;
+        let currentQuestion = null;
+        let selectedAnswer = null;
+        let score = { correct: 0, incorrect: 0 };
+        const SCORE_DOC_PATH = "b2_score";
+        const SCORE_COLLECTION_NAME = "french_quiz_scores";
+        let audioContext = null;
+
+        // --- Utility Functions for TTS ---
+
+        /**
+         * Converts a Base64 string to an ArrayBuffer.
+         * @param {string} base64 - The Base64 encoded string.
+         * @returns {ArrayBuffer} The ArrayBuffer.
+         */
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        /**
+         * Converts signed 16-bit PCM data to a WAV Blob.
+         * @param {Int16Array} pcm16 - The PCM data.
+         * @param {number} sampleRate - The sample rate of the audio.
+         * @returns {Blob} The WAV audio blob.
+         */
+        function pcmToWav(pcm16, sampleRate) {
+            const numChannels = 1;
+            const bitsPerSample = 16;
+            const blockAlign = (numChannels * bitsPerSample) / 8;
+            const byteRate = blockAlign * sampleRate;
+            
+            const buffer = new ArrayBuffer(44 + pcm16.byteLength);
+            const view = new DataView(buffer);
+
+            /* RIFF identifier */
+            writeString(view, 0, 'RIFF');
+            /* file length */
+            view.setUint32(4, 36 + pcm16.byteLength, true);
+            /* RIFF type */
+            writeString(view, 8, 'WAVE');
+            /* format chunk identifier */
+            writeString(view, 12, 'fmt ');
+            /* format chunk length */
+            view.setUint32(16, 16, true);
+            /* sample format (raw) */
+            view.setUint16(20, 1, true);
+            /* channel count */
+            view.setUint16(22, numChannels, true);
+            /* sample rate */
+            view.setUint32(24, sampleRate, true);
+            /* byte rate (sample rate * block align) */
+            view.setUint32(28, byteRate, true);
+            /* block align (channel count * bytes per sample) */
+            view.setUint16(32, blockAlign, true);
+            /* bits per sample */
+            view.setUint16(34, bitsPerSample, true);
+            /* data chunk identifier */
+            writeString(view, 36, 'data');
+            /* data chunk length */
+            view.setUint32(40, pcm16.byteLength, true);
+
+            // Write PCM data
+            const pcmBytes = new Uint8Array(buffer, 44);
+            const pcmSourceBytes = new Uint8Array(pcm16.buffer);
+            pcmBytes.set(pcmSourceBytes);
+
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+
+        /**
+         * Helper to write a string to DataView.
+         */
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        /**
+         * Handles the Text-to-Speech generation and playback.
+         * @param {string} word - The French word to speak.
+         */
+        async function speakWord(word) {
+            const listenButton = document.getElementById('listen-button');
+            const listenIcon = document.getElementById('listen-icon');
+            const loadingSpinner = document.getElementById('loading-spinner');
+
+            listenButton.disabled = true;
+            listenIcon.style.display = 'none';
+            loadingSpinner.style.display = 'block';
+
+            try {
+                // Initialize AudioContext if it hasn't been already
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                const payload = {
+                    contents: [{
+                        parts: [{ text: word }]
+                    }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: {
+                            voiceConfig: {
+                                // Using a standard French-compatible voice (Kore, for firm/clear tone)
+                                prebuiltVoiceConfig: { voiceName: "Kore" } 
+                            },
+                            languageCode: "fr-FR" // Explicitly set language to French
+                        }
+                    },
+                    model: "gemini-2.5-flash-preview-tts"
+                };
+
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+                let response;
+                for (let i = 0; i < 3; i++) {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) break;
+                    if (response.status === 429 && i < 2) {
+                        const delay = Math.pow(2, i) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                    throw new Error(`TTS API error: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const part = result?.candidates?.[0]?.content?.parts?.[0];
+                const audioData = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+
+                if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                    const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+                    if (!sampleRateMatch) throw new Error("Could not determine sample rate from mimetype.");
+                    
+                    const sampleRate = parseInt(sampleRateMatch[1], 10);
+                    const pcmDataBuffer = base64ToArrayBuffer(audioData);
+                    
+                    // API returns signed PCM16 audio data.
+                    const pcm16 = new Int16Array(pcmDataBuffer);
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+
+                    const audio = new Audio(audioUrl);
+                    audio.onended = () => {
+                        // Clean up the temporary URL
+                        URL.revokeObjectURL(audioUrl);
+                        listenButton.disabled = false;
+                        listenIcon.style.display = 'block';
+                        loadingSpinner.style.display = 'none';
+                    };
+                    audio.play();
+
+                } else {
+                    console.error("TTS response missing audio data.");
+                    throw new Error("Failed to generate audio.");
+                }
+
+            } catch (error) {
+                console.error("Error speaking word:", error);
+                // Fallback UI state
+                listenButton.disabled = false;
+                listenIcon.style.display = 'block';
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+
+        // --- Utility Functions for Quiz ---
+
+        /**
+         * Shuffles an array in place using the Fisher-Yates algorithm.
+         * @param {Array} a - The array to shuffle.
+         * @returns {Array} The shuffled array.
+         */
+        function shuffleArray(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('correct-count').textContent = score.correct;
+            document.getElementById('incorrect-count').textContent = score.incorrect;
+        }
+
+        function showLoading(isLoading) {
+            document.getElementById('loader').style.display = isLoading ? 'flex' : 'none';
+            document.getElementById('quiz-content').style.display = isLoading ? 'none' : 'block';
+            document.getElementById('action-button').disabled = isLoading;
+            document.getElementById('action-button').textContent = isLoading ? 'Loading...' : 'Submit Answer';
+        }
+
+        function resetUIForNewQuestion() {
+            selectedAnswer = null;
+            document.getElementById('feedback-area').style.display = 'none';
+            document.getElementById('action-button').textContent = 'Submit Answer';
+            document.getElementById('action-button').onclick = checkAnswer;
+            document.getElementById('action-button').disabled = true;
+            document.getElementById('options-area').innerHTML = ''; // Clear options
+            document.getElementById('question-area').classList.remove('bg-score-correct', 'bg-score-incorrect');
+            document.getElementById('question-area').classList.add('bg-gray-50');
+            document.getElementById('explanation-text').innerHTML = ''; // Clear old explanation
+            
+            // Reset Listen button state
+            document.getElementById('listen-button').disabled = false;
+            document.getElementById('listen-icon').style.display = 'block';
+            document.getElementById('loading-spinner').style.display = 'none';
+        }
+
+        // --- Firestore Operations ---
+
+        /**
+         * Get the Firestore document path for the current user's score.
+         * @returns {string} The document path.
+         */
+        function getScoreDocRef() {
+            // Check if db and userId are initialized before proceeding
+            if (!db || !userId || userId.startsWith('local-')) return null;
+            const docPath = `/artifacts/${appId}/users/${userId}/${SCORE_COLLECTION_NAME}/${SCORE_DOC_PATH}`;
+            return doc(db, docPath);
+        }
+
+        /**
+         * Saves the current score to Firestore.
+         */
+        async function saveScore() {
+            const scoreRef = getScoreDocRef();
+            if (!scoreRef) {
+                console.warn("Skipping score save: Firestore not initialized or running in local mode.");
+                return;
+            }
+            try {
+                await setDoc(scoreRef, score, { merge: true });
+            } catch (error) {
+                console.error("Error saving score to Firestore:", error);
+            }
+        }
+
+        /**
+         * Subscribes to real-time score updates from Firestore.
+         */
+        function subscribeToScore() {
+            const scoreRef = getScoreDocRef();
+            if (!scoreRef) {
+                console.warn("Skipping score subscription: Firestore not initialized or running in local mode.");
+                return;
+            }
+
+            // Use onSnapshot to listen for real-time changes
+            onSnapshot(scoreRef, (doc) => {
+                if (doc.exists()) {
+                    const savedScore = doc.data();
+                    score.correct = savedScore.correct || 0;
+                    score.incorrect = savedScore.incorrect || 0;
+                } else {
+                    // Document doesn't exist, initialize it
+                    score = { correct: 0, incorrect: 0 };
+                    saveScore();
+                }
+                updateScoreDisplay();
+                console.log("Score updated from Firestore:", score);
+            }, (error) => {
+                console.error("Error subscribing to score:", error);
+            });
+        }
+
+        // --- Core Game Logic ---
+
+        function handleAnswerClick(event) {
+            // Remove selection class from all buttons and re-apply default styling
+            document.querySelectorAll('.btn-option').forEach(btn => {
+                btn.classList.remove('bg-selected');
+                btn.classList.add('bg-primary', 'hover-primary', 'text-white');
+            });
+
+            // Add selection class to the clicked button
+            event.target.classList.remove('bg-primary', 'hover-primary', 'text-white');
+            event.target.classList.add('bg-selected');
+            selectedAnswer = event.target.textContent.trim();
+            document.getElementById('action-button').disabled = false;
+        }
+
+        function checkAnswer() {
+            if (!selectedAnswer || !currentQuestion) return;
+
+            const isCorrect = selectedAnswer === currentQuestion.correct_translation;
+
+            // Disable all options and action button
+            document.querySelectorAll('.btn-option').forEach(btn => btn.disabled = true);
+            document.getElementById('action-button').disabled = true;
+            document.getElementById('listen-button').disabled = true; // Disable listen button after submitting
+
+            // Update UI feedback
+            const feedbackArea = document.getElementById('feedback-area');
+            const feedbackResult = document.getElementById('feedback-result');
+            const explanationText = document.getElementById('explanation-text');
+
+            if (isCorrect) {
+                feedbackResult.textContent = "🥳 Correct! Excellent work!";
+                feedbackArea.classList.add('border-correct', 'bg-score-correct', 'border-emerald-500');
+                feedbackArea.classList.remove('border-incorrect', 'bg-score-incorrect', 'border-red-500');
+                score.correct++;
+            } else {
+                feedbackResult.textContent = `❌ Incorrect. The correct answer was: "${currentQuestion.correct_translation}"`;
+                feedbackArea.classList.add('border-incorrect', 'bg-score-incorrect', 'border-red-500');
+                feedbackArea.classList.remove('border-correct', 'bg-score-correct', 'border-emerald-500');
+                score.incorrect++;
+            }
+
+            // Highlight the correct answer
+            document.querySelectorAll('.btn-option').forEach(btn => {
+                btn.classList.remove('bg-selected', 'bg-primary', 'hover-primary', 'text-white');
+                if (btn.textContent.trim() === currentQuestion.correct_translation) {
+                    btn.classList.add('bg-emerald-500', 'hover:bg-emerald-600', 'text-white');
+                } else {
+                    btn.classList.add('bg-gray-400', 'opacity-50', 'text-white');
+                }
+            });
+
+            // Display structured explanation
+            const details = currentQuestion.explanation_details;
+            explanationText.innerHTML = `
+                <div class="space-y-4">
+                    <div class="p-3 rounded-lg bg-gray-100 border border-gray-200">
+                        <p class="font-bold text-xl text-indigo-700">📚 Etymology & Root</p>
+                        <p class="mt-1">${details.etymology}</p>
+                    </div>
+
+                    <div class="p-3 rounded-lg bg-gray-100 border border-gray-200">
+                        <p class="font-bold text-xl text-indigo-700">💡 Detailed Usage</p>
+                        <p class="mt-1">${details.usage_details}</p>
+                    </div>
+
+                    <div class="p-3 rounded-lg bg-gray-100 border border-gray-200">
+                        <p class="font-bold text-xl text-indigo-700">💬 Second Example</p>
+                        <p class="mt-2 italic text-lg text-gray-800">🇫🇷 ${details.second_example.french}</p>
+                        <p class="text-sm text-gray-600">🇬🇧 ${details.second_example.english}</p>
+                    </div>
+                </div>
+            `;
+            feedbackArea.style.display = 'block';
+
+            // Update score and save to Firestore
+            updateScoreDisplay();
+            saveScore();
+
+            // Change action button to 'Continue'
+            const actionButton = document.getElementById('action-button');
+            actionButton.textContent = 'Next Word (Continue)';
+            actionButton.onclick = startNewQuestion;
+            actionButton.disabled = false;
+        }
+
+        function renderQuestion() {
+            if (!currentQuestion) return;
+
+            document.getElementById('french-word').textContent = currentQuestion.word_french.toUpperCase();
+            document.getElementById('french-example').textContent = currentQuestion.example_french;
+            
+            // Attach TTS handler to the listen button
+            document.getElementById('listen-button').onclick = () => speakWord(currentQuestion.word_french);
+
+            const optionsArea = document.getElementById('options-area');
+            optionsArea.innerHTML = '';
+
+            // Combine all options and shuffle them
+            let options = currentQuestion.options || [];
+            if (!options.includes(currentQuestion.correct_translation)) {
+                options.push(currentQuestion.correct_translation);
+            }
+            options = shuffleArray(options);
+
+
+            options.forEach(option => {
+                const button = document.createElement('button');
+                // Ensure default classes are applied here
+                button.className = 'btn-option p-4 rounded-xl text-xl sm:text-2xl font-bold text-white bg-primary hover-primary shadow-lg';
+                button.textContent = option;
+                button.onclick = handleAnswerClick;
+                optionsArea.appendChild(button);
+            });
+        }
+
+        async function fetchNewQuestion() {
+            showLoading(true);
+
+
+            // --- Add prompt randomizer to ensure variation ---
+            const randomSeed = Math.floor(Math.random() * 1000000);
+
+
+            const systemPrompt = `You are a French language expert and vocabulary test generator for Intermediate (B1/B2) level.
+            Generate a single new French vocabulary word that has NOT been used recently.
+            Be concise, produce only valid JSON, and avoid repeating previous words.
+            The 'explanation_details' object MUST contain structured information for etymology, usage, and a second example. Ensure the usage details are descriptive of nuance and context.
+            Seed: ${randomSeed}`;
+
+
+            const userQuery = `Generate a **unique** Intermediate-level French vocabulary question (B1/B2).
+            Include: a French word, its correct English translation, three plausible distractors, one full French example sentence, and a structured explanation object with etymology, detailed usage, and a second example sentence/translation.
+            Use the seed ${randomSeed} to ensure diversity.`;
+
+
+            const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+            type: 'OBJECT',
+            properties: {
+            word_french: { type: 'STRING' },
+            correct_translation: { type: 'STRING' },
+            example_french: { type: 'STRING' },
+            explanation_details: { // New structured field
+                type: 'OBJECT',
+                properties: {
+                    etymology: { type: 'STRING', description: 'Origin and root of the word.' },
+                    usage_details: { type: 'STRING', description: 'Detailed explanation of meaning, nuance, and grammar.' },
+                    second_example: { 
+                        type: 'OBJECT',
+                        properties: {
+                            french: { type: 'STRING' },
+                            english: { type: 'STRING' }
+                        }
+                    }
+                }
+            }
+            ,
+            options: { type: 'ARRAY', items: { type: 'STRING' } }
+            }
+            }
+            }
+            };
+
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            // Exponential backoff for API calls
+            let response;
+            for (let i = 0; i < 3; i++) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+                        // --- Validation and de-duplication logic ---
+                        if (!jsonText) throw new Error('Empty response from model.');
+
+                        let parsed;
+                        try {
+                            parsed = JSON.parse(jsonText);
+                        } catch (e) {
+                            console.warn('Non-JSON or malformed output, retrying with new seed.');
+                            // Recursive call with new attempt
+                            return await fetchNewQuestion();
+                        }
+
+                        if (!parsed.word_french || parsed.word_french.length < 2) {
+                            console.warn('Invalid or empty word returned, retrying.');
+                             // Recursive call with new attempt
+                            return await fetchNewQuestion();
+                        }
+
+                        if (window.lastFrenchWord && parsed.word_french === window.lastFrenchWord) {
+                            console.warn('Duplicate French word detected, regenerating.');
+                            // Recursive call with new attempt
+                            return await fetchNewQuestion();
+                        }
+
+                        window.lastFrenchWord = parsed.word_french;
+                        return parsed;
+                    } else if (response.status === 429 && i < 2) {
+                        // Rate limit error, wait and retry
+                        const delay = Math.pow(2, i) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    } else {
+                        throw new Error(`API error: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.error("Fetch attempt failed:", error);
+                    if (i === 2) throw error; // Re-throw on final attempt
+                    const delay = Math.pow(2, i) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            throw new Error("Failed to fetch content after multiple retries.");
+        }
+
+        async function startNewQuestion() {
+            resetUIForNewQuestion();
+            try {
+                const newQuestionData = await fetchNewQuestion();
+                currentQuestion = newQuestionData;
+                renderQuestion();
+            } catch (error) {
+                console.error("Failed to load new question:", error);
+                document.getElementById('french-word').textContent = "ERROR";
+                document.getElementById('french-example').textContent = "Could not load vocabulary. Please check console for details.";
+                document.getElementById('action-button').disabled = true;
+                document.getElementById('options-area').innerHTML = '<p class="text-red-500 text-center text-xl font-semibold">Failed to load content. Try refreshing.</p>';
+            } finally {
+                showLoading(false);
+            }
+        }
+
+
+        // --- Initialization ---
+        async function initApp() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+
+                onAuthStateChanged(
+                    auth, async (user) => {
+                    if (user) {
+                    userId = user.uid;
+                    } else {
+                    const userCred = await signInAnonymously(auth);
+                    userId = userCred.user.uid;
+                    }
+
+                    document.getElementById('user-id-value').textContent = userId;
+                    document.getElementById('user-id-display').classList.remove('text-red-500', 'font-bold');
+                    subscribeToScore();
+                    }
+                );
+            } catch (error) {
+                console.error('Firebase Initialization Failed:', error);
+                userId = `local-${crypto.randomUUID()}`;
+                document.getElementById('user-id-value').textContent = `${userId.substring(0, 8)}... (No Save)`;
+                document.getElementById('user-id-display').classList.add('text-red-500', 'font-bold');
+            }
+
+
+            startNewQuestion(); // always start the quiz
+            }
+
+        // async function initApp() {
+        //     // let firebaseConfig ={};
+        //     // let isFirebaseConfigPresent = false;
+            
+        //     // // 1. Safely parse the global config
+        //     // try {
+        //     //     const parsedConfig = JSON.parse(firebaseConfig);
+        //     //     if (Object.keys(parsedConfig).length > 0) {
+        //     //         firebaseConfig = parsedConfig;
+        //     //         isFirebaseConfigPresent = true;
+        //     //     }
+        //     // } catch (e) {
+        //     //     console.warn("Could not parse Firebase config (expected if not configured).", e);
+        //     // }
+
+
+        //     // 2. Immediate UI update: Force-set a local ID to stop 'Loading...' hang
+        //     userId = `local-${crypto.randomUUID()}`;
+        //     document.getElementById('user-id-value').textContent = `${userId.substring(0, 8)}... (No Save)`;
+        //     document.getElementById('user-id-display').classList.add('text-red-500', 'font-bold');
+            
+        //     // 3. Start the quiz immediately
+        //     startNewQuestion();
+
+        //     // 4. If config is present, proceed with Firebase authentication asynchronously
+        //     if (isFirebaseConfigPresent) {
+        //         document.getElementById('user-id-display').classList.remove('text-red-500', 'font-bold');
+        //         document.getElementById('user-id-value').textContent = 'Authenticating...';
+
+        //         try {
+        //             const app = initializeApp(firebaseConfig);
+        //             db = getFirestore(app);
+        //             auth = getAuth(app);
+
+        //             onAuthStateChanged(auth, async (user) => {
+        //                 if (user) {
+        //                     userId = user.uid;
+        //                 } else {
+        //                     // Sign in using token or anonymously
+        //                     if (initialAuthToken) {
+        //                         const userCred = await signInWithCustomToken(auth, initialAuthToken);
+        //                         userId = userCred.user.uid;
+        //                     } else {
+        //                         const userCred = await signInAnonymously(auth);
+        //                         userId = userCred.user.uid;
+        //                     }
+        //                 }
+
+        //                 // Final state: Authenticated and ready to save/load
+        //                 isAuthReady = true;
+        //                 document.getElementById('user-id-value').textContent = userId;
+        //                 subscribeToScore();
+        //             });
+
+        //         } catch (error) {
+        //             console.error("Firebase Initialization Failed. Continuing in No-Save Mode.", error);
+        //             // Revert to local ID if initialization fails during async attempt
+        //             document.getElementById('user-id-value').textContent = `${userId.substring(0, 8)}... (No Save - Auth Failed)`;
+        //             document.getElementById('user-id-display').classList.add('text-red-500', 'font-bold');
+        //         }
+        //     } else {
+        //          console.warn("No Firebase configuration detected. Running in non-persisted mode.");
+        //     }
+        // }
+
+        window.onload = initApp;
+
+    </script>
+</body>
+</html>
