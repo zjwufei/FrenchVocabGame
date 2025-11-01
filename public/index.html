@@ -150,7 +150,7 @@
 
         <!-- Submit/Continue Button -->
         <div class="text-center">
-            <button id="action-button" class="w-full sm:w-1/2 p-4 rounded-xl text-2xl font-bold text-white bg-primary hover-primary shadow-lg" disabled>
+            <button id="action-button" class="w-full sm:w-1/2 p-4 rounded-xl text-2xl font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-lg" disabled>
                 Submit Answer
             </button>
             <button id="skip-button" onclick="skipQuestion()" class="w-full sm:w-1/2 p-4 rounded-xl text-xl font-bold text-gray-700 bg-gray-200 hover:bg-gray-300 shadow-md transition duration-150">
@@ -678,14 +678,14 @@
             // Note: No score or history update on skip.
             startNewQuestion();
         }
-        
+
         function renderQuestion() {
             if (!currentQuestion) return;
 
             document.getElementById('french-word').textContent = currentQuestion.word_french.toUpperCase();
             document.getElementById('french-example').textContent = currentQuestion.example_french;
             
-            document.getElementById('listen-button').onclick = () => speakWord(currentQuestion.word_french);
+            document.getElementById('listen-button').onclick = () => speakWord(currentQuestion.example_french);
 
             const optionsArea = document.getElementById('options-area');
             optionsArea.innerHTML = '';
