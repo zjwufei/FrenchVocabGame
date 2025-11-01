@@ -153,6 +153,9 @@
             <button id="action-button" class="w-full sm:w-1/2 p-4 rounded-xl text-2xl font-bold text-white bg-primary hover-primary shadow-lg" disabled>
                 Submit Answer
             </button>
+            <button id="skip-button" onclick="skipQuestion()" class="w-full sm:w-1/2 p-4 rounded-xl text-xl font-bold text-gray-700 bg-gray-200 hover:bg-gray-300 shadow-md transition duration-150">
+                Skip Word
+            </button>
         </div>
 
         <!-- Feedback and Explanation Area (Hidden initially) -->
@@ -466,6 +469,7 @@
             document.getElementById('quiz-content').style.display = isLoading ? 'none' : 'block';
             document.getElementById('action-button').disabled = isLoading;
             document.getElementById('action-button').textContent = isLoading ? 'Loading...' : 'Submit Answer';
+            document.getElementById('skip-button').disabled = isLoading;
         }
 
         function resetUIForNewQuestion() {
@@ -474,6 +478,7 @@
             document.getElementById('action-button').textContent = 'Submit Answer';
             document.getElementById('action-button').onclick = checkAnswer;
             document.getElementById('action-button').disabled = true;
+            document.getElementById('skip-button').disabled = false; 
             document.getElementById('options-area').innerHTML = '';
             document.getElementById('question-area').classList.remove('bg-score-correct', 'bg-score-incorrect');
             document.getElementById('question-area').classList.add('bg-gray-50');
@@ -608,6 +613,7 @@
 
             document.querySelectorAll('.btn-option').forEach(btn => btn.disabled = true);
             document.getElementById('action-button').disabled = true;
+            document.getElementById('skip-button').disabled = true; 
             document.getElementById('listen-button').disabled = true;
 
             const feedbackArea = document.getElementById('feedback-area');
@@ -668,6 +674,11 @@
             actionButton.disabled = false;
         }
 
+        window.skipQuestion = function() {
+            // Note: No score or history update on skip.
+            startNewQuestion();
+        }
+        
         function renderQuestion() {
             if (!currentQuestion) return;
 
