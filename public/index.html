@@ -68,9 +68,12 @@
                     <select id="language" name="language" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="" disabled selected>Select a language</option>
                         <option value="French">French</option>
+                        <option value="Italian">Italian</option>
                         <option value="Spanish">Spanish</option>
+                        <option value="Portuguese">Portuguese</option>
                         <option value="German">German</option>
                         <option value="Japanese">Japanese</option>
+                        <option value="Korean">Korean</option>
                         <option value="Mandarin Chinese">Mandarin Chinese</option>
                         <option value="Hebrew">Hebrew</option>
                     </select>
@@ -218,8 +221,6 @@
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const TTS_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
 
-        // const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=';
-        // const TTS_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=';
 
         // Elements
         const screens = {
